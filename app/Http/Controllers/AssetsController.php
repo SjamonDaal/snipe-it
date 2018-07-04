@@ -483,6 +483,10 @@ class AssetsController extends Controller
             $target = User::find(request('assigned_user'));
             $asset->location_id = ($target) ? $target->location_id : '';
         }
+        //Set Locale for notification
+        if (($target->locale)) {
+                \App::setLocale($target->locale);
+        }
 
         // No valid target was found - error out
         if (!$target) {
@@ -504,8 +508,13 @@ class AssetsController extends Controller
 
 
         if ($asset->checkOut($target, $admin, $checkout_at, $expected_checkin, e(Input::get('note')), Input::get('name'))) {
+            //Reset language for this admin
+            \App::setLocale($admin->locale);
             return redirect()->route("hardware.index")->with('success', trans('admin/hardware/message.checkout.success'));
         }
+
+        //Reset language for this admin
+        \App::setLocale($admin->locale);
 
         // Redirect to the asset management page with error
         return redirect()->to("hardware/$assetId/checkout")->with('error', trans('admin/hardware/message.checkout.error'))->withErrors($asset->getErrors());
